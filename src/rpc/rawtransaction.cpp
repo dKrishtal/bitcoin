@@ -1803,12 +1803,22 @@ UniValue converttopsbt(const JSONRPCRequest& request)
 
 UniValue signsendrawtransaction(const JSONRPCRequest& request)
 {
-    JSONRPCRequest req = JSONRPCRequest();
-    req.params = UniValue(UniValue::VARR);
-
-    UniValue signedRawTransaction = signrawtransaction(request);
-    req.params.push_back(signedRawTransaction["hex"]);
-    return sendrawtransaction(req);
+	JSONRPCRequest reqSend = JSONRPCRequest();
+	JSONRPCRequest reqSign = JSONRPCRequest();
+	reqSend.params = UniValue(UniValue::VARR);
+	reqSign.params = UniValue(UniValue::VARR);
+	
+	reqSign.params.push_back(request.params[0]);
+	reqSign.params.push_back(request.params[1]);
+	reqSign.params.push_back(request.params[2]);
+	
+	UniValue signedRawTransaction = signrawtransaction(reqSign);
+	
+	reqSend.params.push_back(signedRawTransaction["hex"]);
+	if (request.params.size() > 3)
+		reqSend.params.push_back(request.params[3]);
+	
+	return sendrawtransaction(reqSend);
 }
 
 static const CRPCCommand commands[] =
