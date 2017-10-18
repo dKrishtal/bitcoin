@@ -1801,6 +1801,16 @@ UniValue converttopsbt(const JSONRPCRequest& request)
     return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
 }
 
+UniValue signsendrawtransaction(const JSONRPCRequest& request)
+{
+    JSONRPCRequest req = JSONRPCRequest();
+    req.params = UniValue(UniValue::VARR);
+
+    UniValue signedRawTransaction = signrawtransaction(request);
+    req.params.push_back(signedRawTransaction["hex"]);
+    return sendrawtransaction(req);
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                            actor (function)            argNames
   //  --------------------- ------------------------        -----------------------     ----------
@@ -1811,6 +1821,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "sendrawtransaction",           &sendrawtransaction,        {"hexstring","allowhighfees"} },
     { "rawtransactions",    "combinerawtransaction",        &combinerawtransaction,     {"txs"} },
     { "rawtransactions",    "signrawtransaction",           &signrawtransaction,        {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
+    { "rawtransactions",    "signsendrawtransaction",       &signsendrawtransaction,    {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
     { "rawtransactions",    "signrawtransactionwithkey",    &signrawtransactionwithkey, {"hexstring","privkeys","prevtxs","sighashtype"} },
     { "rawtransactions",    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","allowhighfees"} },
     { "rawtransactions",    "decodepsbt",                   &decodepsbt,                {"psbt"} },
