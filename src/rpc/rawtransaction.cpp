@@ -958,6 +958,16 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     return hashTx.GetHex();
 }
 
+UniValue signsendrawtransaction(const JSONRPCRequest& request)
+{
+	JSONRPCRequest req = JSONRPCRequest();
+	req.params = UniValue(UniValue::VARR);	
+	
+	UniValue signedRawTransaction = signrawtransaction(request);
+	req.params.push_back(signedRawTransaction["hex"]);
+	return sendrawtransaction(req);
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
@@ -968,6 +978,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     false, {"hexstring","allowhighfees"} },
     { "rawtransactions",    "combinerawtransaction",  &combinerawtransaction,  true,  {"txs"} },
     { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     false, {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
+	{ "rawtransactions",    "signsendrawtransaction", &signsendrawtransaction, false, {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
 
     { "blockchain",         "gettxoutproof",          &gettxoutproof,          true,  {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       true,  {"proof"} },
