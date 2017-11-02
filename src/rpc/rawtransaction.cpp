@@ -1044,6 +1044,108 @@ UniValue signsendrawtransaction(const JSONRPCRequest& request)
 	return sendrawtransaction(reqSend);
 }
 
+UniValue reqAddresses;
+
+bool inReqAddresses(const std::string& addr)
+{
+	for(unsigned int i = 0; i < reqAddresses.size(); i++) {
+		if(addr.compare(reqAddresses[i].get_str()) == 0 )
+			return true;
+	}
+	return false;
+}
+
+bool inRequest(const CTransaction& tx)
+{
+    txnouttype type;
+    std::vector<CTxDestination> addresses;
+    int nRequired;
+	
+    for (unsigned int i = 0; i < tx.vout.size(); i++) {
+        ExtractDestinations(tx.vout[i].scriptPubKey, type, addresses, nRequired);
+		
+	    for (const CTxDestination& addr : addresses)
+	        if(inReqAddresses(CBitcoinAddress(addr).ToString()))
+				return true;
+    }
+	return false;
+}
+
+bool inTime(const CTransaction& tx)
+{
+	return false;
+}
+
+UniValue getrtx(const std::string& txid, bool checkInReq = false)
+{
+	UniValue null(UniValue::VNULL);
+	
+    LOCK(cs_main);
+
+    uint256 hash = ParseHashV(txid, "parameter 1");
+
+    CTransactionRef tx;
+    uint256 hashBlock;
+    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
+        return null;
+	
+	if(checkInReq)
+		if(!inRequest(*tx))
+			return null;
+
+    UniValue result(UniValue::VOBJ);
+    TxToJSON(*tx, hashBlock, result);
+    return result;
+}
+
+UniValue gettxsfrommempoolbyaddresses(const JSONRPCRequest& request)
+{
+	reqAddresses = request.params;
+	
+    std::vector<uint256> vtxid;
+    mempool.queryHashes(vtxid);
+
+	UniValue tmp;
+    UniValue a(UniValue::VARR);
+    for (const uint256& hash : vtxid) {
+		tmp = getrtx(hash.ToString(), true);
+		if(!tmp.isNull())
+			a.push_back(tmp);
+    }
+
+    return a;
+}
+
+int64_t last_time = GetTime();
+
+UniValue getTxHashesByTime()
+{
+	UniValue a(UniValue::VARR);
+		
+    LOCK(mempool.cs);
+    for (const CTxMemPoolEntry& e : mempool.mapTx)
+    {
+		if(e.GetTime() > last_time)
+			a.push_back(e.GetTx().GetHash().ToString());
+    }
+	
+	last_time = GetTime();
+	
+	return a;
+}
+
+UniValue getextendrawmempool(const JSONRPCRequest& request)
+{	
+	UniValue result(UniValue::VARR);
+	UniValue hashes = getTxHashesByTime();
+
+	for(size_t i = 0; i < hashes.size(); i++) {
+		result.push_back(getrtx(hashes[i].get_str()));
+	}
+	
+    return result;
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
@@ -1054,10 +1156,12 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     {"hexstring","allowhighfees"} },
     { "rawtransactions",    "combinerawtransaction",  &combinerawtransaction,  {"txs"} },
     { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
-  { "rawtransactions",    "signsendrawtransaction",   &signsendrawtransaction, {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
+    { "rawtransactions",    "signsendrawtransaction", &signsendrawtransaction, {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
 
     { "blockchain",         "gettxoutproof",          &gettxoutproof,          {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       {"proof"} },
+    { "blockchain",         "gettxsfrommempoolbyaddresses", &gettxsfrommempoolbyaddresses, {"txid", "txid1", "txid2", "..."} },
+    { "blockchain",         "getextendrawmempool",    &getextendrawmempool,    {"hours"} },
 };
 
 void RegisterRawTransactionRPCCommands(CRPCTable &t)
