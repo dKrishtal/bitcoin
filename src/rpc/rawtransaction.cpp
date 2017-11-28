@@ -1116,12 +1116,20 @@ UniValue gettxsfrommempoolbyaddresses(const JSONRPCRequest& request)
     return a;
 }
 
-int64_t last_time = GetTime();
+static std::map<std::string, int> last_times = {};
 
-UniValue getTxHashesByTime()
-{
+UniValue getTxHashesByTime(UniValue id)
+{		
 	UniValue a(UniValue::VARR);
-		
+	int last_time = GetTime();
+	
+	if(last_times.find(id.get_str()) != last_times.end()) {
+		last_time = last_times[id.get_str()];
+		last_times[id.get_str()] = GetTime();
+	} else {
+		last_times[id.get_str()] = last_time;
+	}
+	
     LOCK(mempool.cs);
     for (const CTxMemPoolEntry& e : mempool.mapTx)
     {
@@ -1129,17 +1137,15 @@ UniValue getTxHashesByTime()
 			a.push_back(e.GetTx().GetHash().ToString());
     }
 	
-	last_time = GetTime();
-	
 	return a;
 }
 
 UniValue getextendrawmempool(const JSONRPCRequest& request)
 {	
 	UniValue result(UniValue::VARR);
-	UniValue hashes = getTxHashesByTime();
+	UniValue hashes = getTxHashesByTime(request.params[0]);
 
-	for(size_t i = 0; i < hashes.size(); i++) {
+	for(size_t i = 0; i < hashes.size() && i < 1000; i++) {
 		result.push_back(getrtx(hashes[i].get_str()));
 	}
 	
@@ -1161,7 +1167,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "gettxoutproof",          &gettxoutproof,          {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       {"proof"} },
     { "blockchain",         "gettxsfrommempoolbyaddresses", &gettxsfrommempoolbyaddresses, {"txid", "txid1", "txid2", "..."} },
-    { "blockchain",         "getextendrawmempool",    &getextendrawmempool,    {"hours"} },
+    { "blockchain",         "getextendrawmempool",    &getextendrawmempool,    {"id"} },
 };
 
 void RegisterRawTransactionRPCCommands(CRPCTable &t)
