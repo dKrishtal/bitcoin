@@ -1130,6 +1130,8 @@ UniValue getTxHashesByTime(UniValue id)
 		last_times[id.get_str()] = last_time;
 	}
 	
+	last_time -= 60; // seconds
+	
     LOCK(mempool.cs);
     for (const CTxMemPoolEntry& e : mempool.mapTx)
     {
