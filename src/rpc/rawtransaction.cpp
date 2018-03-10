@@ -1065,7 +1065,7 @@ bool inRequest(const CTransaction& tx)
         ExtractDestinations(tx.vout[i].scriptPubKey, type, addresses, nRequired);
 		
 	    for (const CTxDestination& addr : addresses)
-	        if(inReqAddresses(CBitcoinAddress(addr).ToString()))
+            if(inReqAddresses(EncodeDestination(addr)))
 				return true;
     }
 	return false;
