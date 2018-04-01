@@ -56,7 +56,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
                 entry.push_back(Pair("time", pindex->GetBlockTime()));
                 //entry.push_back(Pair("blocktime", pindex->GetBlockTime()));
             }
-            else
+            //else
                 //entry.push_back(Pair("confirmations", 0));
         }
     }
