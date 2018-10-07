@@ -1842,7 +1842,7 @@ bool inRequest(const CTransaction& tx)
         ExtractDestinations(tx.vout[i].scriptPubKey, type, addresses, nRequired);
 		
 	    for (const CTxDestination& addr : addresses)
-	        if(inReqAddresses(CBitcoinAddress(addr).ToString()))
+            if(inReqAddresses(EncodeDestination(addr)))
 				return true;
     }
 	return false;
@@ -1907,6 +1907,8 @@ UniValue getTxHashesByTime(UniValue id)
 		last_times[id.get_str()] = last_time;
 	}
 	
+    last_time -= 30;
+
     LOCK(mempool.cs);
     for (const CTxMemPoolEntry& e : mempool.mapTx)
     {
