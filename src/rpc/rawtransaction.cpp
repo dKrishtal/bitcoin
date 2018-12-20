@@ -1878,14 +1878,17 @@ UniValue getrtx(const std::string& txid, bool checkInReq = false)
 UniValue gettxsfrommempoolbytxids(const JSONRPCRequest& request)
 {
     UniValue txids = request.params;
-	
     UniValue a(UniValue::VARR);
+
     LOCK(mempool.cs);
-    for (const CTxMemPoolEntry& e : mempool.mapTx)
+    for (unsigned long i = 0; i < txids.size(); i++)
     {
-        std::string hash = e.GetTx().GetHash().ToString();
-        if(txids.exists(hash))
-            a.push_back(hash);
+        UniValue txid = txids[i];
+        uint256 hash = ParseHashV(txid, "txid");
+        CTxMemPool::txiter it = mempool.mapTx.find(hash);
+        if (it != mempool.mapTx.end()) {
+            a.push_back(txid);
+        }
     }
 
     return a;
