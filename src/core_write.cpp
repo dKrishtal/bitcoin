@@ -158,17 +158,17 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     std::vector<CTxDestination> addresses;
     int nRequired;
 
-    out.pushKV("asm", ScriptToAsmStr(scriptPubKey));
-    if (fIncludeHex)
-        out.pushKV("hex", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
+//    out.pushKV("asm", ScriptToAsmStr(scriptPubKey));
+//    if (fIncludeHex)
+//        out.pushKV("hex", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
 
-    if (!ExtractDestinations(scriptPubKey, type, addresses, nRequired)) {
-        out.pushKV("type", GetTxnOutputType(type));
-        return;
-    }
+//    if (!ExtractDestinations(scriptPubKey, type, addresses, nRequired)) {
+//        out.pushKV("type", GetTxnOutputType(type));
+//        return;
+//    }
 
-    out.pushKV("reqSigs", nRequired);
-    out.pushKV("type", GetTxnOutputType(type));
+//    out.pushKV("reqSigs", nRequired);
+//    out.pushKV("type", GetTxnOutputType(type));
 
     UniValue a(UniValue::VARR);
     for (const CTxDestination& addr : addresses) {
@@ -181,11 +181,11 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
 {
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
-    entry.pushKV("version", tx.nVersion);
-    entry.pushKV("size", (int)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION));
-    entry.pushKV("vsize", (GetTransactionWeight(tx) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR);
-    entry.pushKV("weight", GetTransactionWeight(tx));
-    entry.pushKV("locktime", (int64_t)tx.nLockTime);
+    //entry.pushKV("version", tx.nVersion);
+    //entry.pushKV("size", (int)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION));
+    //entry.pushKV("vsize", (GetTransactionWeight(tx) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR);
+    //entry.pushKV("weight", GetTransactionWeight(tx));
+    //entry.pushKV("locktime", (int64_t)tx.nLockTime);
 
     UniValue vin(UniValue::VARR);
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
@@ -197,18 +197,18 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             in.pushKV("txid", txin.prevout.hash.GetHex());
             in.pushKV("vout", (int64_t)txin.prevout.n);
             UniValue o(UniValue::VOBJ);
-            o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
-            o.pushKV("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()));
-            in.pushKV("scriptSig", o);
-            if (!tx.vin[i].scriptWitness.IsNull()) {
-                UniValue txinwitness(UniValue::VARR);
-                for (const auto& item : tx.vin[i].scriptWitness.stack) {
-                    txinwitness.push_back(HexStr(item.begin(), item.end()));
-                }
-                in.pushKV("txinwitness", txinwitness);
-            }
+            //o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
+            //o.pushKV("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()));
+            //in.pushKV("scriptSig", o);
+//            if (!tx.vin[i].scriptWitness.IsNull()) {
+//                UniValue txinwitness(UniValue::VARR);
+//                for (const auto& item : tx.vin[i].scriptWitness.stack) {
+//                    txinwitness.push_back(HexStr(item.begin(), item.end()));
+//                }
+//                in.pushKV("txinwitness", txinwitness);
+//            }
         }
-        in.pushKV("sequence", (int64_t)txin.nSequence);
+        //in.pushKV("sequence", (int64_t)txin.nSequence);
         vin.push_back(in);
     }
     entry.pushKV("vin", vin);
@@ -229,10 +229,10 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     }
     entry.pushKV("vout", vout);
 
-    if (!hashBlock.IsNull())
-        entry.pushKV("blockhash", hashBlock.GetHex());
+//    if (!hashBlock.IsNull())
+//        entry.pushKV("blockhash", hashBlock.GetHex());
 
-    if (include_hex) {
-        entry.pushKV("hex", EncodeHexTx(tx, serialize_flags)); // The hex-encoded transaction. Used the name "hex" to be consistent with the verbose output of "getrawtransaction".
-    }
+//    if (include_hex) {
+//        entry.pushKV("hex", EncodeHexTx(tx, serialize_flags)); // The hex-encoded transaction. Used the name "hex" to be consistent with the verbose output of "getrawtransaction".
+//    }
 }
